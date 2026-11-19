@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JavaScript Quiz</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    body {
+      margin: 0;
+      background: #f3f4f6;
+      color: #111827;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+    }
+    .quiz-card {
+      width: 100%;
+      max-width: 600px;
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+    }
+    .page-heading {
+      margin: 0 0 1.25rem 0;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: #111827;
+    }
+    .progress-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #4f46e5;
+      margin-bottom: 0.5rem;
+    }
+    .question-text {
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin: 0 0 1.25rem 0;
+      line-height: 1.4;
+    }
+    .options-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-bottom: 1.75rem;
+    }
+    .option-label {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s;
+    }
+    .option-label:hover {
+      background: #f9fafb;
+      border-color: #9ca3af;
+    }
+    .option-label input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #4f46e5;
+      cursor: pointer;
+    }
+    .actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    button.primary-btn {
+      background: #4f46e5;
+      color: #ffffff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button.primary-btn:hover:not(:disabled) {
+      background: #4338ca;
+    }
+    button.primary-btn:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    .result-box {
+      text-align: center;
+    }
+    .result-score {
+      font-size: 2rem;
+      font-weight: 800;
+      color: #111827;
+      margin: 0.5rem 0;
+    }
+    .result-percentage {
+      font-size: 1.15rem;
+      color: #374151;
+      margin-bottom: 1rem;
+    }
+    .perfect-banner {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #86efac;
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+    }
+    .encouragement-banner {
+      background: #fef9c3;
+      color: #854d0e;
+      border: 1px solid #fde047;
+      padding: 0.9rem 1rem;
+      border-radius: 8px;
+      font-weight: 500;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="quiz-card">
+    <h1 class="page-heading">JavaScript Quiz</h1>
+    <div id="quiz-app"></div>
+  </div>
+
+  <script>
+    // 1. Array of 4 question objects
+    const questions = [
+      {
+        question: "Which keyword declares a block-scoped variable in JavaScript?",
+        options: ["var", "let", "function", "define"],
+        correctIndex: 1
+      },
+      {
+        question: "Which array method adds one or more elements to the end of an array?",
+        options: ["push()", "pop()", "shift()", "slice()"],
+        correctIndex: 0
+      },
+      {
+        question: "What does strict equality (===) check in JavaScript?",
+        options: [
+          "Value only after type conversion",
+          "Memory address only",
+          "Both value and data type without type conversion",
+          "Variable name and scope"
+        ],
+        correctIndex: 2
+      },
+      {
+        question: "Which method selects the first element matching a CSS selector in the DOM?",
+        options: [
+          "document.getElementsByClassName()",
+          "document.querySelectorAll()",
+          "document.querySelector()",
+          "document.findElement()"
+        ],
+        correctIndex: 2
+      }
+    ];
+
+    let currentIndex = 0;
+    let score = 0;
+    let selectedOptionIndex = null;
+
+    const appEl = document.getElementById("quiz-app");
+
+    function renderQuestion() {
+      const q = questions[currentIndex];
+      const isLastQuestion = currentIndex === questions.length - 1;
+      const buttonLabel = isLastQuestion ? "Finish" : "Next";
+
+      selectedOptionIndex = null;
+
+      const optionsHtml = q.options
+        .map(
+          (optionText, idx) => `
+            <label class="option-label">
+              <input
+                type="radio"
+                name="quizOption"
+                value="${idx}"
+                onchange="handleOptionSelect(${idx})"
+              />
+              <span>${optionText}</span>
+            </label>
+          `
+        )
+        .join("");
+
+      appEl.innerHTML = `
+        <div class="progress-text">Question ${currentIndex + 1} of ${questions.length}</div>
+        <h2 class="question-text">${q.question}</h2>
+        <div class="options-list">${optionsHtml}</div>
+        <div class="actions">
+          <button id="next-btn" class="primary-btn" disabled onclick="handleNext()">
+            ${buttonLabel}
+          </button>
+        </div>
+      `;
+    }
+
+    function handleOptionSelect(optionIdx) {
+      selectedOptionIndex = optionIdx;
+      document.getElementById("next-btn").disabled = false;
+    }
+
+    function handleNext() {
+      if (selectedOptionIndex === null) return;
+
+      if (selectedOptionIndex === questions[currentIndex].correctIndex) {
+        score++;
+      }
+
+      currentIndex++;
+
+      if (currentIndex < questions.length) {
+        renderQuestion();
+      } else {
+        renderResult();
+      }
+    }
+
+    function renderResult() {
+      const total = questions.length;
+      const percentage = Math.round((score / total) * 100);
+      const isPerfect = percentage === 100;
+
+      const messageHtml = isPerfect
+        ? `<div class="perfect-banner">Outstanding! You scored 100% — every single answer is correct!</div>`
+        : `<div class="encouragement-banner">Good effort! Review the questions and try again to aim for 100%.</div>`;
+
+      appEl.innerHTML = `
+        <div class="result-box">
+          <h2>Quiz Completed!</h2>
+          <div class="result-score">${score}/${total}</div>
+          <div class="result-percentage">Percentage: ${percentage}%</div>
+          ${messageHtml}
+          <button class="primary-btn" onclick="restartQuiz()">Restart Quiz</button>
+        </div>
+      `;
+    }
+
+    function restartQuiz() {
+      currentIndex = 0;
+      score = 0;
+      selectedOptionIndex = null;
+      renderQuestion();
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
